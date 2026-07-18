@@ -9,7 +9,7 @@
 <br>
 
 <div align="center">
-  <p><b>A modern Graph Neural Network approach to tracking and forecasting episodic outbreaks of Dengue fever across regions in Brazil.</b></p>
+  <p><b>A modern geometric deep learning approach to tracking and forecasting episodic outbreaks of Dengue fever across regions in Brazil.</b></p>
 </div>
 
 ---
@@ -20,12 +20,23 @@ Dengue fever remains a critical public health challenge in tropical and subtropi
 
 We demonstrate how topological deep learning can adaptively learn the hidden relationships across geographic boundaries, yielding robust predictions against real-world episodic data.
 
-### ✨ Key Features
+<br>
 
-- **Advanced GNN Architecture**: Incorporates **Sheaf Attentional** patterns to capture local and global geometric structure explicitly.
-- **Micro & Macro Regression**: Weekly node-level predictions with extensive bias-correction steps (Duan Smearing & Headroom Clamping).
-- **Comprehensive Evaluation**: Metrics encompassing `R2_log`, `MAE`, `RMSE`, and classification thresholds (`ROC_AUC`, `PR_AUC`).
-- **Flexible Pipeline**: Built on PyTorch, ready for both CPU validation and GPU heavy-lifting.
+## 🧠 Graph Neural Network Techniques
+
+Our methodology evaluates multiple graph architectures to address the spatial-temporal complexity of epidemic propagation:
+
+### 1. 🧬 Sheaf Attention Networks (Core Innovation)
+Traditional GNNs assume uniform smoothing (homophily) across neighbors. However, disease spread is highly heterogeneous due to factors like geographical barriers, climate variants, and transportation networks. 
+We employ **Cellular Sheaves**—a mathematical construct from algebraic topology:
+- **Sheaf Laplacian**: Instead of a standard graph Laplacian, we construct a Sheaf Laplacian that dictates how feature spaces at one node translate to its neighbors.
+- **Learnable Restriction Maps**: For each geographic edge, the model utilizes an MLP to learn restriction matrices, explicitly capturing directional and asymmetric outbreak propagation.
+
+### 2. 🎯 Graph Attention Networks (GAT)
+Using masked self-attention over geographic adjacencies, the Temporal GAT dynamically evaluates the varying importance of neighboring regions. This allows the model to flexibly weigh which adjacent micro-regions contribute most to localized outbreaks week over week.
+
+### 3. 🌐 Graph Convolutional Networks (GCN)
+A robust baseline that acts as a spectral filter on the geography graph, smoothing lagged epidemiological and climate features across interconnected municipalities.
 
 ---
 
@@ -33,25 +44,25 @@ We demonstrate how topological deep learning can adaptively learn the hidden rel
 
 ```mermaid
 graph TD
-    A[Raw Epidemiological Data] --> B(Data Preprocessing)
-    B --> C(Topology Construction View)
+    A[Raw Epidemiological Data] --> B(Sequence Lagging & Scaling)
+    B --> C(Regional Topography Graph)
     C --> D[Sheaf Attention Layer]
-    D --> E[Temporal Processing]
+    D --> E[Temporal Embedding]
     E --> F[Huber Loss Optimization]
-    F --> G((Final Predictions))
+    F --> G((Bias-Corrected Predictions))
 ```
 
-The model architecture revolves around multiple implementations accessible in `models/`:
-- `SheafTemporal` (in `sheaf_model.py`)
-- `GAT`, `GCN`, and basic `GNN` baselines
+### ✨ Key Implementation Details
+- **Micro & Macro Regression**: Simultaneous region-level (micro) and country-level (macro) forecasting.
+- **Bias-Correction Mechanisms**: Utilizes **Duan Smearing estimators** and Headroom Clamping to safely reconstruct logarithmic predictions back to the real domain.
+- **Evaluation Spectrum**: Detailed logging of `R2_log`, `MAE`, `RMSE`, `SMAPE`, bounded with `ROC_AUC` / `PR_AUC` derived symmetrically from the regression task.
 
 <br>
 
 ## 🚀 Getting Started
 
 ### 1. Prerequisites
-
-Ensure you have Python 3.9+ and PyTorch installed. Alternatively, you can use Conda:
+Ensure you have Python 3.9+ and PyTorch installed globally or within a Conda environment.
 
 ```bash
 # Clone the repository
@@ -59,47 +70,38 @@ git clone https://github.com/danielhuynh-04/Sheaf-Attention-Networks-in-forecast
 cd Sheaf-Attention-Networks-in-forecasting-Dengue-fever-in-Brazil
 
 # Create environment and install dependencies
-pip install -r requirements.txt
+pip install torch pandas numpy scikit-learn
 ```
-*(If `requirements.txt` is missing, standard installations of `torch`, `pandas`, `numpy`, and `scikit-learn` are required).*
 
-### 2. Running Global GAT / Sheaf Model
+### 2. Running the Forecasting Model
 
-To perform a full training, validation, and testing procedure over all weekly snapshots, simply execute:
-
+The main entry point handles training, validation, and testing procedures dynamically.
 ```bash
-python run_global_gat.py --model gat --epochs 200
+python run_global_gat.py --model sheaf_conn --epochs 200
 ```
 
 **Parameters supported via CLI args:**
-- `--model`: Choice of `gat`, `gcn`, `gnn`, `sheaf`, `sheaf_conn`.
+- `--model`: Choose the geometric processor (`gat`, `gcn`, `gnn`, `sheaf`, `sheaf_conn`).
 - `--epochs`: Number of epochs to train.
-- `--eval_only`: Disables training, loads the best `.pt` file checkpoint.
-- `--export_predictions`: Generates spatial-temporal metrics on a node-level (`.csv` export).
-
-Example for **Sheaf**:
-```bash
-python run_global_gat.py --model sheaf_conn --epochs 150 --export_predictions 1
-```
-
----
-
-## 📊 Evaluation & Reporting
-
-All running outputs are tracked sequentially.
-1. **Model Checkpoints**: Best checkpoints are saved to `checkpoints/`
-2. **Weekly Metrics**: `data/interim/<model>_global_weekly_report.csv`
-3. **Training Logs**: `data/interim/<model>_epoch_log.csv`
-4. **Summary Stats**: A `JSON` summary file aggregating micro and macro stats can be found in `data/interim/` directory as well.
-
----
-
-## 👨‍💻 Author and Contributions
-
-Built and researched by **Huynh Le Thanh Hai**.
-
-This project forms part of an organized academic research endeavor. External contributions are welcome. Please fork the repository and propose changes through Pull Requests (PRs). Ensure all mathematical proofs and topological structure changes are thoroughly documented in PR descriptions.
+- `--eval_only`: `1` disables training and loads the best saved `.pt` checkpoint.
+- `--export_predictions`: `1` generates spatial-temporal predictions on a node-level scale (`.csv`).
 
 <br>
 
-> **Note**: For privacy and file-size constraints, the `data/`, `visualizations/`, `checkpoints/`, and proprietary documentation formats (`.docx`, `.pdf`) have been excluded from this public repository. All necessary dummy structures or open datasets should be reconstructed by the user into the `data/` folder directory.
+## 📊 Evaluation & Reporting
+
+All runtime checkpoints and logs are automatically generated:
+1. **Model Checkpoints**: Optimized checkpoints run straight to `checkpoints/<model>_global_best.pt`
+2. **Weekly Metrics Tracker**: `data/interim/<model>_global_weekly_report.csv`
+3. **Training Log Histories**: `data/interim/<model>_epoch_log.csv`
+4. **Summary Stats**: JSON reports on precision/recall bounds across validation and test schemas.
+
+<br>
+
+## 👨‍💻 Author and Contributions
+
+Researched and implemented by **Huynh Le Thanh Hai**.
+
+This repository serves as an academic deep learning endeavor tracking disease vectors algebraically. External contributions are welcome via Pull Requests (PRs). Please ensure topological modifications and derivations are clearly documented in the PR notes.
+
+> **Note**: For privacy bounds and computational size limits, structural data folders (`data/`, `visualizations/`, `checkpoints/`) have been ignored from this public repository index. Users should reconstruct the dataset vectors locally into `data/`.

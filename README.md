@@ -27,7 +27,7 @@ Mô hình cơ bản nhất, dùng Message Passing thông thường. Hoạt độ
 
 ### 2. Graph Convolutional Networks (GCN)
 Kế thừa học thuyết **Homophily** (Đồng chất). GCN áp dụng phân tích vi phân dải phổ (spectral filtering).
-Nó coi mức độ đe dọa lây nhiễm từ MUNICIPALITY A lên các hàng xóm là **tuyệt đối như nhau**.
+Nó coi mức độ đe dọa lây nhiễm từ Đô thị A lên các hàng xóm là **tuyệt đối như nhau**.
 `File: models/gcn_model.py | Arg: --model gcn`
 
 ```mermaid
@@ -40,7 +40,7 @@ graph TD
 ```
 
 ### 3. Spatial-Temporal Graph Attention Networks (ST-GAT)
-Đột phá với hệ thống **Self-Attention**. ST-GAT liên tục quan sát chuỗi đồ thị thời gian thực để học ra cơ chế lây lan ưu tiên. Nó tự động ấn định "*Mức chú ý*" $\alpha$.
+Đột phá với hệ thống **Self-Attention**. ST-GAT liên tục quan sát chuỗi đồ thị thời gian thực để học ra cơ chế lây lan ưu tiên thông qua hệ số $\alpha$.
 `File: models/temporal_gat.py | Arg: --model gat`
 
 ```mermaid
@@ -52,12 +52,10 @@ graph TD
     style C fill:#c8e6c9,color:#000;
 ```
 
-### 4. Nền tảng Topological Sheaf (Sheaf Baseline)
-Bước nhảy vào kỷ nguyên Đại Số Topo học (Algebraic Topology). Rũ bỏ giả định Homophily, mạng lưới đồ thị dịch tễ bị dị cấu trúc mạnh (Heterophily) do cản trở địa lý, lưu lượng di chuyển... Mô hình tạo ra các **Vector Spaces** cho từng đỉnh, ánh xạ lên cạnh qua toán tử Sheaf Laplacian độc quyền. `Arg: --model sheaf`
+### 4. Nền tảng Topological Sheaf (Sheaf Baseline) & Nhánh 5. Sheaf Connection (Sheaf_Conn)
+Bước nhảy vào kỷ nguyên Đại Số Topo học (Algebraic Topology). Rũ bỏ giả định Homophily, mạng lưới đồ thị dịch tễ bị dị cấu trúc mạnh (Heterophily) do cản trở địa lý, lưu lượng di chuyển... Mô hình tạo ra các **Vector Spaces** cho từng đỉnh, ánh xạ lên cạnh qua toán tử Sheaf Laplacian độc quyền. `Arg: --model sheaf | --model sheaf_conn`
 
-### 5. Đột Phá Lõi: Sheaf Connection Neural Networks (Sheaf_Conn)
-Tinh hoa luận văn, mô hình học các ma trận **Restriction Maps** $F(A \to e)$ cực kì phức tạp trên từng rìa đồ thị. Nó phản ánh độ trễ **bất đối xứng hoàn hảo**. Đi lại từ A qua B rất dễ khiến dịch lan mạnh, nhưng ngược lại B về A thì không.
-`File: models/sheaf_connection.py | Arg: --model sheaf_conn`
+Tóm tắt sự ưu việt: Học các ma trận **Restriction Maps** $F(A \to e)$ cực kì phức tạp trên từng rìa đồ thị. Nó phản ánh độ trễ **bất đối xứng hoàn hảo**. Đi lại từ A qua B rất dễ khiến dịch lan mạnh, nhưng ngược lại B về A thì không.
 
 ```mermaid
 graph LR
@@ -70,27 +68,46 @@ graph LR
 
 ---
 
-## 🛠️ Trình Tự Thực Nghiệm Trực Quan (Pipeline Workflows)
+## 🗃️ Quy Trình Tổng Thể Đặc Chuẩn Data Scientist (End-to-End Pipeline Workflow)
 
-Bộ Codebase được thiết kế vô cùng chặt chẽ mô phỏng vòng đời nghiên cứu thực tế qua các tiện ích tại `utils/` & công cụ đo lường tại `tools/`.
+Thiết kế kiến trúc vòng đời mô hình dựa trên quy chuẩn **Data Science chuyên nghiệp**, đi sâu từng module vật lý thực thụ bên trong hệ thống dự án.
 
 ```mermaid
-journey
-    title Vòng đời Huấn luyện và Đánh giá Đặc Tả Nghiên Cứu
-    section 1. Kiến tạo Data (utils)
-      Buớc 1: Tạo Đồ thị Cạnh (Edges): 5: Utils
-      Buớc 2: Gắn Features & Labels 2010-2024: 5: Utils
-      Buớc 3: Scaling MinMax Features: 7: Utils
-    section 2. Đào tạo Đồ thị (trainers)
-      Setup Cấu trúc Sheaf: 7: Core Models
-      Temporal Lags LSTM: 6: Models
-      Tối ưu hóa ngắt sớm (Early Stopping): 5: Trainers
-    section 3. Bias Correction 
-      Giải nén Log1p: 7: Tools
-      Ước lượng Duan Smearing & Sigma^2: 8: Math
-    section 4. Final Benchmark
-      Trích xuất JSON Summary: 6: Evaluation
-      Báo cáo so sánh 5 Mô Hình: 8: Insights
+graph TD
+    subgraph "1. Tiền Xử Lý Dữ Liệu Khổng Lồ (Data Engineering)"
+      A1[Dữ Liệu Thô (Raw): Dịch tễ, Khí hậu, Dân số vùng]
+      A2[Biến Đổi Cấu Trúc Đồ Thị: Tạo Biên/Cạnh lân cận]
+      A3[Feature Engineering: Lags Sequence & Scaling MinMax]
+      A4[Trích Xuất Snapshot: Cắt lát đồ thị Tuần 2010-2024]
+      A1 --> A2 --> A3 --> A4
+    end
+
+    subgraph "2. Động Cơ Học Đồ Thị & Thời Gian (Spatiotemporal Modeling)"
+      B1[Inputs Đồ thị Không-Thời Gian Tuần T]
+      B2[Lớp Hình Học (Topological Layer): Sheaf/GAT/GCN]
+      B3[Tuần tự Thời Gian (Temporal Layer): Trích xuất chuỗi Lags]
+      B4[Lạc Hướng Học: Huber Loss & Chuẩn Log1p]
+      B5[Thiết Lập Backpropagation & Early Stopping]
+      
+      A4 --> B1 --> B2 --> B3 --> B4 --> B5
+      B5 -. "Gradient Descents" .-> B2
+    end
+    
+    subgraph "3. Bias Error Correction & Triển Khai Đo Lường (Evaluation)"
+      C1[Ma trận Sinh Dự Báo Nút (Node Predictions)]
+      C2[Khôi Phục Thực Tế (Bias-Correction): Duan Smearing & Sigma^2]
+      C3[Áo Động Hồi Quy (Regression): SMAPE, RMSE, Trimming R2]
+      C4[Khuếch Đại Phân Lớp (Classification Thresholds): ROC-AUC]
+      C5[Trích Dữ Liệu Dashboard & Visualizations (Export CSV/JSON)]
+      
+      B5 --> C1 --> C2 --> C3 --> C4 --> C5
+    end
+    
+    %% Style adjustments
+    style A1 fill:#37474f,color:#fff
+    style B2 fill:#1565c0,color:#fff
+    style C2 fill:#e65100,color:#fff
+    style C5 fill:#00695c,color:#fff
 ```
 
 <br>

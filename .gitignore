@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Models and Checkpoints
+checkpoints/
+models/*.pt
+models/*.pth
+data/
+evaluations/
+evaluation/
+visualizations/
+data/processed/
+data/interim/
+
+# Word, PDF, and other documents
+*.docx
+*.pdf
+
+# IDEs and environments
+.vscode/
+.idea/
+.env
+venv/
+env/
+.codegraph/
+
+# Temp files
+*.log
+*.tmp
+.DS_Store

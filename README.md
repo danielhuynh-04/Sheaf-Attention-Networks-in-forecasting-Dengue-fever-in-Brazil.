@@ -22,21 +22,65 @@ We demonstrate how topological deep learning can adaptively learn the hidden rel
 
 <br>
 
-## 🧠 Graph Neural Network Techniques
+## 🧠 Phân tích Trực quan các Kỹ Thuật Graph Neural Networks (GNNs)
 
-Our methodology evaluates multiple graph architectures to address the spatial-temporal complexity of epidemic propagation:
+Mô hình dự báo sốt xuất huyết này được củng cố bằng việc đánh giá 3 biến thể GNN với độ phức tạp hình học tăng dần, nhằm giải quyết đặc thù **lây lan bệnh dịch không đồng nhất** (heterophilic spread) qua các đường ranh giới địa lý.
 
-### 1. 🧬 Sheaf Attention Networks (Core Innovation)
-Traditional GNNs assume uniform smoothing (homophily) across neighbors. However, disease spread is highly heterogeneous due to factors like geographical barriers, climate variants, and transportation networks. 
-We employ **Cellular Sheaves**—a mathematical construct from algebraic topology:
-- **Sheaf Laplacian**: Instead of a standard graph Laplacian, we construct a Sheaf Laplacian that dictates how feature spaces at one node translate to its neighbors.
-- **Learnable Restriction Maps**: For each geographic edge, the model utilizes an MLP to learn restriction matrices, explicitly capturing directional and asymmetric outbreak propagation.
+### 1. 🌐 Baseline Graph Convolutional Networks (GCN)
+`[File: models/gcn_model.py]`
 
-### 2. 🎯 Graph Attention Networks (GAT)
-Using masked self-attention over geographic adjacencies, the Temporal GAT dynamically evaluates the varying importance of neighboring regions. This allows the model to flexibly weigh which adjacent micro-regions contribute most to localized outbreaks week over week.
+GCN hoạt động như một bộ lọc phổ tĩnh (spectral filter). Nó giả định rằng dịch bệnh lan truyền **giống nhau theo mọi hướng** (Homophily). Trạm thông tin của khu vực A sẽ được truyền đều và mượt (smooth) sang các khu vực lân cận B và C với trọng số ngang bằng nhau.
 
-### 3. 🌐 Graph Convolutional Networks (GCN)
-A robust baseline that acts as a spectral filter on the geography graph, smoothing lagged epidemiological and climate features across interconnected municipalities.
+```mermaid
+graph TD
+    A((Vùng A<br>Dịch bùng phát)) ---|Truyền đều 1/N| B((Vùng B<br>Nguy cơ cao))
+    A ---|Truyền đều 1/N| C((Vùng C<br>Nguy cơ cao))
+    
+    style A fill:#e53935,color:#fff,stroke:#b71c1c;
+    style B fill:#ef5350,color:#fff;
+    style C fill:#ef5350,color:#fff;
+```
+*Nhược điểm:* Khi giữa A và C có rào cản tự nhiên (núi, sông lớn), GCN vẫn coi tốc độ lây lan là như nhau.
+
+---
+
+### 2. 🎯 Temporal Graph Attention Networks (GAT)
+`[File: models/temporal_gat.py]`
+
+GAT tích hợp cấu trúc **Self-Attention** nhằm động lực hóa lưới đồ thị. Chẳng hạn, mạng lưới sẽ tự động học được cơ chế: Vùng A có giao thương mạnh với Vùng B (Đường quốc lộ) nên attention score $\alpha = 0.8$, trong khi Vùng C bị cách trở nên score $\alpha = 0.2$. Điều này cho phép GAT linh hoạt vắt lọc các hàng xóm nguy hiểm nhất.
+
+```mermaid
+graph TD
+    A((Vùng A<br>Ổ Dịch)) == "Mức chú ý (Attention) α = 0.8" ==> B((Vùng B<br>Lan truyền mạnh))
+    A -. "Mức chú ý (Attention) α = 0.2" .-> C((Vùng C<br>Lan truyền yếu))
+    
+    style A fill:#43a047,color:#fff,stroke:#1b5e20;
+    style B fill:#66bb6a,color:#fff;
+    style C fill:#c8e6c9,color:#000;
+```
+*Ưu điểm:* Uyển chuyển theo không gian và thời gian.
+
+---
+
+### 3. 🧬 Sheaf Attention Networks (Core Innovation)
+`[Files: models/sheaf_model.py & models/sheaf_connection.py]`
+
+Đây là cốt lõi toán học (Algebraic Topology) của dự án. Mạng GNN truyền thống không thể mô hình hóa độ trễ bất đối xứng (A lây cho B nhưng B không lây ngược lại cho A). Bằng cách dùng **Cellular Sheaves**:
+- **Không gian Vector (Vector Spaces):** Mỗi vùng và mỗi "cạnh" liên kết vùng được trang bị một Vector Space riêng.
+- **Restriction Maps (Bản đồ hạn chế):** Thay vì các tham số vô hướng, mô hình sẽ học các "Ma trận hạn chế" $F(A \to e)$ điều hướng chính xác vector lây lan đi từ vùng A tràn vào cạnh $e$ như thế nào. Giao thức này cho phép điều hướng dòng chảy thông tin cực kì dị cấu tạo (heterophily).
+
+```mermaid
+graph LR
+    A((Vùng A<br>Không gian Va)) -- "Ma trận hạn chế F(A→e)" --> E{Cạnh e<br>Giao tranh lây nhiễm<br>Không gian Ve}
+    B((Vùng B<br>Không gian Vb)) -- "Ma trận hạn chế F(B→e)" --> E
+    
+    style A fill:#5e35b1,color:#fff,stroke:#311b92,stroke-width:2px;
+    style B fill:#5e35b1,color:#fff,stroke:#311b92,stroke-width:2px;
+    style E fill:#ffb300,color:#fff,shape:hexagon,stroke:#f57f17,stroke-width:3px;
+```
+*Sức mạnh:* Xử lý ưu việt hiện tượng lây nhiễm bất đối xứng dựa trên Sheaf Laplacian.
+
+<br>
 
 ---
 
@@ -44,12 +88,12 @@ A robust baseline that acts as a spectral filter on the geography graph, smoothi
 
 ```mermaid
 graph TD
-    A[Raw Epidemiological Data] --> B(Sequence Lagging & Scaling)
-    B --> C(Regional Topography Graph)
+    A[Dữ liệu Đặc Trưng Không-Thời-Gian] --> B(Sequence Lagging & Scaling)
+    B --> C(Thiết lập đồ thị địa lý)
     C --> D[Sheaf Attention Layer]
-    D --> E[Temporal Embedding]
+    D --> E[Temporal Embedding LSTM/RNN]
     E --> F[Huber Loss Optimization]
-    F --> G((Bias-Corrected Predictions))
+    F --> G((Bias-Corrected Predictions & Duan Smearing))
 ```
 
 ### ✨ Key Implementation Details

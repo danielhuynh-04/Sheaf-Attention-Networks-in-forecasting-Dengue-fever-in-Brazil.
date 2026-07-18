@@ -32,8 +32,8 @@ Nó coi mức độ đe dọa lây nhiễm từ Đô thị A lên các hàng xó
 
 ```mermaid
 graph TD
-    A((Điểm Dịch A)) -- "Phân tán đều 1/N" --> B((Khu vực B))
-    A -- "Phân tán đều 1/N" --> C((Khu vực C))
+    A(("Điểm Dịch A")) -- "Phân tán đều 1/N" --> B(("Khu vực B"))
+    A -- "Phân tán đều 1/N" --> C(("Khu vực C"))
     style A fill:#e53935,color:#fff,stroke:#b71c1c;
     style B fill:#ef5350,color:#fff;
     style C fill:#ef5350,color:#fff;
@@ -45,8 +45,8 @@ graph TD
 
 ```mermaid
 graph TD
-    A((Ổ Dịch Lõi)) == "Trọng số Attention α=0.85" ==> B((Giao thương mạnh))
-    A -. "Trọng số Attention α=0.15" .-> C((Vùng cách ly tự nhiên))
+    A(("Ổ Dịch Lõi")) == "Trọng số Attention α=0.85" ==> B(("Giao thương mạnh"))
+    A -. "Trọng số Attention α=0.15" .-> C(("Vùng cách ly tự nhiên"))
     style A fill:#43a047,color:#fff,stroke:#1b5e20;
     style B fill:#66bb6a,color:#fff;
     style C fill:#c8e6c9,color:#000;
@@ -59,8 +59,8 @@ Tóm tắt sự ưu việt: Học các ma trận **Restriction Maps** $F(A \to e
 
 ```mermaid
 graph LR
-    A((Vùng A<br>Không gian Va)) -- "Lây lan dị đồng<br>F(A→e)" --> E{Cạnh Nối e<br>Giao Điểm Không Gian<br>Ve}
-    B((Vùng B<br>Không gian Vb)) -- "Lây lan dị đồng<br>F(B→e)" --> E
+    A(("Vùng A<br>Không gian Va")) -- "Lây lan dị đồng<br>F(A→e)" --> E{"Cạnh Nối e<br>Giao Điểm Không Gian<br>Ve"}
+    B(("Vùng B<br>Không gian Vb")) -- "Lây lan dị đồng<br>F(B→e)" --> E
     style A fill:#5e35b1,color:#fff,stroke:#311b92,stroke-width:2px;
     style B fill:#5e35b1,color:#fff,stroke:#311b92,stroke-width:2px;
     style E fill:#ffb300,color:#fff,shape:hexagon,stroke:#f57f17,stroke-width:3px;
@@ -75,30 +75,30 @@ Thiết kế kiến trúc vòng đời mô hình dựa trên quy chuẩn **Data 
 ```mermaid
 graph TD
     subgraph "1. Tiền Xử Lý Dữ Liệu Khổng Lồ (Data Engineering)"
-      A1[Dữ Liệu Thô (Raw): Dịch tễ, Khí hậu, Dân số vùng]
-      A2[Biến Đổi Cấu Trúc Đồ Thị: Tạo Biên/Cạnh lân cận]
-      A3[Feature Engineering: Lags Sequence & Scaling MinMax]
-      A4[Trích Xuất Snapshot: Cắt lát đồ thị Tuần 2010-2024]
+      A1["Dữ Liệu Thô (Raw): Dịch tễ, Khí hậu, Dân số vùng"]
+      A2["Biến Đổi Cấu Trúc Đồ Thị: Tạo Biên/Cạnh lân cận"]
+      A3["Feature Engineering: Lags Sequence & Scaling MinMax"]
+      A4["Trích Xuất Snapshot: Cắt lát đồ thị Tuần 2010-2024"]
       A1 --> A2 --> A3 --> A4
     end
 
     subgraph "2. Động Cơ Học Đồ Thị & Thời Gian (Spatiotemporal Modeling)"
-      B1[Inputs Đồ thị Không-Thời Gian Tuần T]
-      B2[Lớp Hình Học (Topological Layer): Sheaf/GAT/GCN]
-      B3[Tuần tự Thời Gian (Temporal Layer): Trích xuất chuỗi Lags]
-      B4[Lạc Hướng Học: Huber Loss & Chuẩn Log1p]
-      B5[Thiết Lập Backpropagation & Early Stopping]
+      B1["Inputs Đồ thị Không-Thời Gian Tuần T"]
+      B2["Lớp Hình Học (Topological Layer): Sheaf/GAT/GCN"]
+      B3["Tuần tự Thời Gian (Temporal Layer): Trích xuất chuỗi Lags"]
+      B4["Lạc Hướng Học: Huber Loss & Chuẩn Log1p"]
+      B5["Thiết Lập Backpropagation & Early Stopping"]
       
       A4 --> B1 --> B2 --> B3 --> B4 --> B5
       B5 -. "Gradient Descents" .-> B2
     end
     
     subgraph "3. Bias Error Correction & Triển Khai Đo Lường (Evaluation)"
-      C1[Ma trận Sinh Dự Báo Nút (Node Predictions)]
-      C2[Khôi Phục Thực Tế (Bias-Correction): Duan Smearing & Sigma^2]
-      C3[Áo Động Hồi Quy (Regression): SMAPE, RMSE, Trimming R2]
-      C4[Khuếch Đại Phân Lớp (Classification Thresholds): ROC-AUC]
-      C5[Trích Dữ Liệu Dashboard & Visualizations (Export CSV/JSON)]
+      C1["Ma trận Sinh Dự Báo Nút (Node Predictions)"]
+      C2["Khôi Phục Thực Tế (Bias-Correction): Duan Smearing & Sigma^2"]
+      C3["Áo Động Hồi Quy (Regression): SMAPE, RMSE, Trimming R2"]
+      C4["Khuếch Đại Phân Lớp (Classification Thresholds): ROC-AUC"]
+      C5["Trích Dữ Liệu Dashboard & Visualizations (Export CSV/JSON)"]
       
       B5 --> C1 --> C2 --> C3 --> C4 --> C5
     end
